@@ -155,6 +155,28 @@ fun oldest(dates:(int*int*int) list) =
             else SOME first
         end
 
+(*accessory  function*)
+(*get list from origin list which items are distinct*)
+fun distinct(origin_list:int list) =
+    if null origin_list
+    then []
+    else
+        let
+            fun contains(container:int list,item:int) =
+                if null container
+                then false
+                else if item = hd container
+                then true
+                else contains(tl container,item)
+            val first = hd origin_list
+            val tails = tl origin_list
+        in
+            if null tails
+            then origin_list
+            else if  contains(tails,first)
+            then distinct tails
+            else first :: distinct tails
+        end
 (*
     12. Challenge Problem:
         Write functions number_in_months_challenge and dates_in_months_challenge
@@ -164,6 +186,11 @@ fun oldest(dates:(int*int*int) list) =
         (Hint: Remove duplicates, then use previous work.)
 *)
 
+fun number_in_months_challenge(dates:(int * int * int) list, months:int list) =
+    number_in_months(dates,distinct months)
+
+fun dates_in_months_challenge(dates:(int * int * int) list,months:int list) =
+    dates_in_months(dates,distinct months)
 (*
     13. Challenge Problem:
         Write a function reasonable_date that takes a date and determines 
@@ -175,3 +202,36 @@ fun oldest(dates:(int*int*int) list) =
         Leap years are years that are either divisible by 400 or divisible by 4 but not divisible by 100.
     (Do not worry about days possibly lost in the conversion to the Gregorian calendar in the Late 1500s.)
 *)
+
+fun reasonable_date(date:int*int*int) =
+    let
+      val year = #1 date
+      val month = #2 date
+      val day = #3 date
+      fun reasonable_year(year:int ) =
+        year > 0
+      fun reasonable_month(month:int) =
+        month >= 1 andalso month <= 12
+      fun reasonable_day(day:int) =
+        let
+          val common_days = [31,28,31,30,31,30,31,31,30,31,30,31]
+          val leap_days = [31,29,31,30,31,30,31,31,30,31,30,31]
+          fun is_leap_year(year) =
+            (year mod 400) = 0 orelse (year mod 4) = 0 andalso (year mod 100) <> 0
+          fun get_nth_number(numbers:int list,n:int) =
+            if n = 1
+            then hd numbers
+            else get_nth_number(tl numbers,n-1)
+          fun reasonable_day(day:int, max_day:int) = 
+            day >= 1 andalso day <= max_day
+        in
+           let
+             val current_days = if is_leap_year year then leap_days else common_days
+             val max_day = get_nth_number(current_days,month)
+           in
+             reasonable_day(day,max_day)
+           end
+        end
+    in
+      reasonable_year year andalso reasonable_month month andalso reasonable_day day
+    end
